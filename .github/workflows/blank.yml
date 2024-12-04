@@ -22,6 +22,9 @@ jobs:
       - name: Make changes to pull request
         run: date +%s > report.txt
 
+      - name: Make changes to pull 2
+        run: date +%s > report.txt
+
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v7
