@@ -36,31 +36,11 @@ jobs:
 
       # Step 4: Check if both 'prod' and 'nonprod' folders have changes
       - name: Validate folder changes
-        env:
-          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
-          # Initialize flags
-          PROD_CHANGED=false
-          NONPROD_CHANGED=false
-
-          # Iterate over each changed file
-          for file in ${ALL_CHANGED_FILES}; do
-            if [[ "$file" == prod/* ]]; then
-              PROD_CHANGED=true
-            elif [[ "$file" == nonprod/* ]]; then
-              NONPROD_CHANGED=true
-            fi
-
-            # If both flags are true, no need to continue
-            if [ "$PROD_CHANGED" = true ] && [ "$NONPROD_CHANGED" = true ]; then
-              break
-            fi
-          done
-
-          # Check the flags and exit with error if both folders have changes
-          if [ "$PROD_CHANGED" = true ] && [ "$NONPROD_CHANGED" = true ]; then
-            echo "::error ::Both 'prod' and 'nonprod' folders have changes. Please separate them into different pull requests."
+          if echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q 'prod/' && echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q 'nonprod/'; then
+            echo "error"
             exit 1
           else
-            echo "Validation passed: Changes are confined to either 'prod' or 'nonprod' folders."
-          fi
+            echo "passed"
+          fi  
+     
