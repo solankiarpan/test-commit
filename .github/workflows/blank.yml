@@ -6,11 +6,8 @@ on:
       - main
 
 jobs:
-  # ------------------------------------------------------------------------------------------------------------------------------------------------
-  # Event `pull_request`: Compare the last commit of the main branch or last remote commit of the PR branch -> to the current commit of a PR branch.
-  # ------------------------------------------------------------------------------------------------------------------------------------------------
   changed_files:
-    runs-on: ubuntu-latest  # You can also use windows-latest || macos-latest
+    runs-on: ubuntu-latest
     name: Test changed-files
     steps:
       # Step 1: Checkout the repository
@@ -30,17 +27,27 @@ jobs:
           ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
           echo "Changed files:"
-          for file in ${ALL_CHANGED_FILES}; do
-            echo " - $file"
-          done
+          echo "${ALL_CHANGED_FILES}" | tr ' ' '\n' | sed 's/^/ - /'
 
-      # Step 4: Check if both 'prod' and 'nonprod' folders have changes
+      # Step 4: Validate folder changes
       - name: Validate folder changes
         run: |
-          if echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q 'prod/' && echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q 'nonprod/'; then
-            echo "error"
+          # Extract the list of changed files into a variable
+          CHANGED_FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+
+          # Check for changes in any 'prod/' directory
+          echo "$CHANGED_FILES" | grep -qE '(^|/)prod/' && PROD_CHANGED=true || PROD_CHANGED=false
+
+          # Check for changes in any 'nonprod/' directory
+          echo "$CHANGED_FILES" | grep -qE '(^|/)nonprod/' && NONPROD_CHANGED=true || NONPROD_CHANGED=false
+
+          echo "PROD_CHANGED: $PROD_CHANGED"
+          echo "NONPROD_CHANGED: $NONPROD_CHANGED"
+
+          # Fail the job if both directories have changes
+          if [ "$PROD_CHANGED" = "true" ] && [ "$NONPROD_CHANGED" = "true" ]; then
+            echo "::error::Changes detected in both 'prod/' and 'nonprod/' directories. Please separate these changes into different pull requests."
             exit 1
           else
-            echo "passed"
-          fi  
-     
+            echo "Validation passed: Changes are confined to a single directory ('prod/' or 'nonprod/')."
+          fi
