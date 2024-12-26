@@ -18,7 +18,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: arn:aws:iam::018734259996:role/github-oidc
-          role-duration-seconds: 600
+          #role-duration-seconds: 600
           aws-region: us-west-2
 
       - name: Test AWS Credentials
