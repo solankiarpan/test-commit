@@ -1,0 +1,26 @@
+name: Test OIDC Authentication
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write    # Required to use OIDC authentication
+  contents: read     # Required to checkout the code from the repo
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::018734259996:role/github-oidc
+          role-duration-seconds: 600
+          aws-region: us-west-2
+
+      - name: Test AWS Credentials
+        run: aws sts get-caller-identity
+
